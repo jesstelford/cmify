@@ -4,6 +4,9 @@ const cmify = require('./index')
 const through = require('through2')
 const str = require('string-to-stream')
 const createCssModuleSource = require('./create-css-module-source')
+const mkdirp = require('mkdirp')
+const path = require('path')
+const fs = require('fs')
 
 function createCmStream () {
   // fake module
@@ -58,6 +61,18 @@ function cmifyPlugin (b, opts) {
         next(null, row)
       }
     }, function end (done) {
+
+      const outFile = opts.o || opts.outfile
+
+      if (outFile) {
+        try {
+          mkdirp.sync(path.dirname(outFile))
+          fs.writeFileSync(outFile, cmify.getAllCss())
+        } catch (err) {
+          this.emit("error", err)
+        }
+      }
+
       const row = {
         id: cmStream.id,
         source: createCmifySource(),
